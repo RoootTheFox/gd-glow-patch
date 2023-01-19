@@ -1,6 +1,10 @@
+mod app;
 mod err;
 
-use crate::err::PatchError;
+use crate::app::GDGlowPatchApp;
+use crate::err::{PatchError, TargetState};
+use lazy_static::lazy_static;
+use lazy_static_include::lazy_static_include_bytes;
 use std::error::Error;
 use std::fs::{File, OpenOptions};
 use std::io::{BufReader, Read, Seek, SeekFrom, Write};
@@ -11,57 +15,45 @@ const OFFSET: u64 = 0x3C1F7; // sprite encoder image type
 const ORIGINAL: u8 = 0x06; // value to replace (=RGBA4444)
 const PATCHED: u8 = 0x00; // value to replace with (=RGBA8888)
 
+const GAMESHEET_SIZE: u64 = 2865699; // GJ_GameSheet-uhd.png (unmodified) size in bytes
+
+lazy_static! {
+    static ref DIRECTORY: PathBuf = std::env::current_dir().unwrap();
+}
+
+lazy_static_include_bytes! {
+    PATCHED_GAMESHEET => "res/GJ_GameSheet-uhd.png"
+}
+
 fn main() {
-    //let exec_path = std::env::current_exe().unwrap();
-    //let directory = exec_path.parent().unwrap();
+    let options = eframe::NativeOptions {
+        initial_window_size: Some(egui::vec2(320.0, 240.0)),
+        ..Default::default()
+    };
 
-    let directory = std::env::current_dir().unwrap();
+    eframe::run_native(
+        "GD Glow Patch",
+        options,
+        Box::new(|_cc| Box::new(GDGlowPatchApp::default())),
+    );
+}
 
-    if !directory.as_path().is_dir() {
-        panic!("directory is not a directory (wtf how)");
-    }
+fn check_gd_exe(app: &mut GDGlowPatchApp, gd_exe: &PathBuf) -> Result<(), Box<dyn Error>> {
+    let mut reader = BufReader::new(File::open(&gd_exe)?);
+    reader.seek(SeekFrom::Start(OFFSET))?;
 
-    let files = std::fs::read_dir(&directory).unwrap();
+    let mut buf = [0; 1];
+    reader.read(&mut buf)?;
 
-    let mut has_gd_exe = false;
-    let mut has_resources = false;
-
-    for file in files {
-        let file = file.unwrap();
-        let name = &file.file_name().to_str().unwrap().to_string();
-        if name == "Resources" && file.file_type().unwrap().is_dir() {
-            has_resources = true;
-        } else if name == "GeometryDash" && file.file_type().unwrap().is_file() {
-            has_gd_exe = true;
-        }
-    }
-
-    if !has_resources { /*panic!("no resources folder");*/ }
-    if !has_gd_exe {
-        panic!("no gd exe");
-    }
-
-    let gd_exe = directory.join("GeometryDash.exe");
-
-    let resources = directory.join("Resources");
-
-    let exe_patch = patch_exe(gd_exe);
-    if exe_patch.is_ok() && *exe_patch.as_ref().unwrap() {
-        println!("patched exe");
-    } else if exe_patch.is_err() {
-        println!("failed to patch exe: {}", exe_patch.err().unwrap());
+    if buf[0] == PATCHED {
+        app.exe_state = TargetState::Patched;
+    } else if buf[0] != ORIGINAL {
+        app.exe_state = TargetState::Invalid;
     } else {
-        println!("exe already patched");
+        app.exe_state = TargetState::Present;
     }
 
-    let resources_patch = patch_resources(resources);
-    if resources_patch.is_ok() && *resources_patch.as_ref().unwrap() {
-        println!("patched resources");
-    } else if resources_patch.is_err() {
-        println!("failed to patch resources: {}", resources_patch.err().unwrap());
-    } else {
-        println!("resources already patched");
-    }
+    Ok(())
 }
 
 fn patch_exe(gd_exe: PathBuf) -> Result<bool, Box<dyn Error>> {
@@ -80,8 +72,6 @@ fn patch_exe(gd_exe: PathBuf) -> Result<bool, Box<dyn Error>> {
 
     let mut buf = [0; 1];
     reader.read(&mut buf)?;
-
-    println!("value: {:#04x}", buf[0]);
 
     if buf[0] == PATCHED {
         return Ok(false);
@@ -102,12 +92,9 @@ fn patch_exe(gd_exe: PathBuf) -> Result<bool, Box<dyn Error>> {
     Ok(true)
 }
 
-fn patch_resources(directory: PathBuf) -> Result<bool, Box<dyn Error>> {
-    let gj_gamesheet_uhd = include_bytes!("./../res/GJ_GameSheet-uhd.png");
-    let gj_gamesheet_uhd_path = directory.join("GJ_GameSheet-uhd.png");
-
-    let mut writer = OpenOptions::new().write(true).truncate(true).open(gj_gamesheet_uhd_path)?;
-    writer.write(gj_gamesheet_uhd)?;
+fn patch_resources(path: PathBuf) -> Result<bool, Box<dyn Error>> {
+    let mut writer = OpenOptions::new().write(true).truncate(true).open(path)?;
+    writer.write(&PATCHED_GAMESHEET)?;
 
     Ok(true)
 }

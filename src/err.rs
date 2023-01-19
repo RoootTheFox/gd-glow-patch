@@ -30,3 +30,10 @@ impl Error for PatchError {
         &self.message
     }
 }
+
+pub enum TargetState {
+    Present,
+    Patched,
+    Missing,
+    Invalid,
+}
