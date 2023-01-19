@@ -1,5 +1,6 @@
 mod app;
 mod err;
+mod platform;
 
 use crate::app::GDGlowPatchApp;
 use crate::err::{PatchError, TargetState};
@@ -17,17 +18,13 @@ const PATCHED: u8 = 0x00; // value to replace with (=RGBA8888)
 
 const GAMESHEET_SIZE: u64 = 2865699; // GJ_GameSheet-uhd.png (unmodified) size in bytes
 
-lazy_static! {
-    static ref DIRECTORY: PathBuf = std::env::current_dir().unwrap();
-}
-
 lazy_static_include_bytes! {
     PATCHED_GAMESHEET => "res/GJ_GameSheet-uhd.png"
 }
 
 fn main() {
     let options = eframe::NativeOptions {
-        initial_window_size: Some(egui::vec2(320.0, 240.0)),
+        initial_window_size: Some(egui::vec2(280.0, 340.0)),
         ..Default::default()
     };
 

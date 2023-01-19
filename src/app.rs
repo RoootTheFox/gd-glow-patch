@@ -1,11 +1,10 @@
 use crate::err::TargetState;
-use crate::{
-    check_gd_exe, patch_exe, patch_resources, DIRECTORY, GAMESHEET_SIZE, PATCHED_GAMESHEET, SIZE,
-};
+use crate::{check_gd_exe, patch_exe, patch_resources, GAMESHEET_SIZE, PATCHED_GAMESHEET, SIZE, platform};
 use catppuccin_egui::MOCHA;
 use std::path::PathBuf;
 
 pub(crate) struct GDGlowPatchApp {
+    pub(crate) gd_path: PathBuf,
     pub(crate) exe_state: TargetState,
     pub(crate) exe_path: PathBuf,
     pub(crate) gamesheet_state: TargetState,
@@ -14,11 +13,28 @@ pub(crate) struct GDGlowPatchApp {
 
 impl Default for GDGlowPatchApp {
     fn default() -> Self {
+        let target_dir;
+
+        let current_dir = std::env::current_dir().unwrap();
+        if current_dir.join("GeometryDash.exe").exists() {
+            target_dir = current_dir;
+        } else {
+            let gd_dir = platform::get_gd_directory();
+            if gd_dir.is_some() && gd_dir.as_ref().unwrap().is_dir() {
+                println!("Found Geometry Dash directory: {:?}", gd_dir.as_ref().unwrap());
+                target_dir = gd_dir.unwrap();
+            } else {
+                // fall back to current directory so we can show the user helpful error messages
+                target_dir = current_dir;
+            }
+        }
+
         let mut app = Self {
+            gd_path: target_dir.clone(),
             exe_state: TargetState::Missing,
-            exe_path: DIRECTORY.join("GeometryDash.exe"),
+            exe_path: target_dir.join("GeometryDash.exe"),
             gamesheet_state: TargetState::Missing,
-            gamesheet_path: DIRECTORY.join("Resources").join("GJ_GameSheet-uhd.png"),
+            gamesheet_path: target_dir.join("Resources").join("GJ_GameSheet-uhd.png"),
         };
 
         update_ui_states(&mut app);
@@ -95,6 +111,8 @@ impl eframe::App for GDGlowPatchApp {
             {
                 update_ui_states(self);
             }
+            ui.separator();
+            ui.label(format!("{}", self.gd_path.to_str().unwrap())).on_hover_text("Geometry Dash directory");
             ui.separator();
 
             let mut exe_missing = false;
