@@ -88,7 +88,11 @@ impl eframe::App for GDGlowPatchApp {
 
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("GD Glow Patch");
-            if ui.button("refresh").on_hover_text("reloads the UI state (you probably won't need this)").clicked() {
+            if ui
+                .button("refresh")
+                .on_hover_text("reloads the UI state (you probably won't need this)")
+                .clicked()
+            {
                 update_ui_states(self);
             }
             ui.separator();
@@ -101,7 +105,11 @@ impl eframe::App for GDGlowPatchApp {
             match self.exe_state {
                 TargetState::Present => {
                     ui.colored_label(MOCHA.sky, "GeometryDash.exe is present");
-                    if ui.button("Patch exe").on_hover_text("Patches the GeometryDash.exe file").clicked() {
+                    if ui
+                        .button("Patch exe")
+                        .on_hover_text("Patches the GeometryDash.exe file")
+                        .clicked()
+                    {
                         let exe_patched = patch_exe(self.exe_path.clone());
                         if !exe_patched.is_ok() {
                             ui.colored_label(MOCHA.red, "Failed to patch GeometryDash.exe!");
@@ -125,7 +133,11 @@ impl eframe::App for GDGlowPatchApp {
             match self.gamesheet_state {
                 TargetState::Present => {
                     ui.colored_label(MOCHA.sky, "GJ_GameSheet-uhd.png is present");
-                    if ui.button("Patch gamesheet").on_hover_text("Patches GJ_GameSheet-uhd.png for better glow").clicked() {
+                    if ui
+                        .button("Patch gamesheet")
+                        .on_hover_text("Patches GJ_GameSheet-uhd.png for better glow")
+                        .clicked()
+                    {
                         let res_patched = patch_resources(self.gamesheet_path.clone());
                         if !res_patched.is_ok() {
                             ui.colored_label(MOCHA.red, "Failed to patch gamesheet!");
@@ -139,7 +151,11 @@ impl eframe::App for GDGlowPatchApp {
                 }
                 TargetState::Invalid => {
                     ui.colored_label(MOCHA.red, "GJ_GameSheet-uhd.png is invalid!");
-                    if ui.button("Patch gamesheet anyway").on_hover_text("Patches GJ_GameSheet-uhd.png for better glow").clicked() {
+                    if ui
+                        .button("Patch gamesheet anyway")
+                        .on_hover_text("Patches GJ_GameSheet-uhd.png for better glow")
+                        .clicked()
+                    {
                         let res_patched = patch_resources(self.gamesheet_path.clone());
                         if !res_patched.is_ok() {
                             ui.colored_label(MOCHA.red, "Failed to patch gamesheet!");
@@ -155,10 +171,27 @@ impl eframe::App for GDGlowPatchApp {
 
             if exe_missing || gamesheet_missing {
                 ui.separator();
-                ui.colored_label(MOCHA.peach, "Make you you are running this program in the same folder as GeometryDash.exe!");
+                ui.colored_label(
+                    MOCHA.peach,
+                    "Make you you are running this program in the same folder as GeometryDash.exe!",
+                );
             } else if exe_patched && gamesheet_patched {
                 ui.separator();
                 ui.colored_label(MOCHA.teal, "The patch is applied, you are good to go!");
+            } else if gamesheet_patched && (!exe_patched && !exe_missing) {
+                ui.separator();
+                ui.colored_label(
+                    MOCHA.yellow,
+                    "The gamesheet is patched, but the exe is not!\n\
+                You can still play the game, but glow will look bad.",
+                );
+            } else if exe_patched && (!gamesheet_patched && !gamesheet_missing) {
+                ui.separator();
+                ui.colored_label(
+                    MOCHA.yellow,
+                    "The exe is patched, but the gamesheet is not!\n\
+                Your game performance will be better but glow will look bad.",
+                );
             }
         });
     }
