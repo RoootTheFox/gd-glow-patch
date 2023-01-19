@@ -93,6 +93,11 @@ impl eframe::App for GDGlowPatchApp {
             }
             ui.separator();
 
+            let mut exe_missing = false;
+            let mut exe_patched = false;
+            let mut gamesheet_missing = false;
+            let mut gamesheet_patched = false;
+
             match self.exe_state {
                 TargetState::Present => {
                     ui.label("GeometryDash.exe is present and valid.");
@@ -105,13 +110,15 @@ impl eframe::App for GDGlowPatchApp {
                     }
                 }
                 TargetState::Missing => {
-                    ui.colored_label(MOCHA.red, "GeometryDash.exe not found");
+                    ui.colored_label(MOCHA.red, "GeometryDash.exe not found!");
+                    exe_missing = true;
                 }
                 TargetState::Invalid => {
                     ui.colored_label(MOCHA.red, "GeometryDash.exe is invalid!");
                 }
                 TargetState::Patched => {
                     ui.colored_label(MOCHA.green, "GeometryDash.exe is patched!");
+                    exe_patched = true;
                 }
             }
 
@@ -128,7 +135,7 @@ impl eframe::App for GDGlowPatchApp {
                 }
                 TargetState::Missing => {
                     ui.colored_label(MOCHA.red, "GJ_GameSheet-uhd.png not found!");
-                    ui.colored_label(MOCHA.peach, "Make you you are running this program in the same folder as GeometryDash.exe");
+                    gamesheet_missing = true;
                 }
                 TargetState::Invalid => {
                     ui.colored_label(MOCHA.red, "GJ_GameSheet-uhd.png is invalid!");
@@ -142,7 +149,16 @@ impl eframe::App for GDGlowPatchApp {
                 }
                 TargetState::Patched => {
                     ui.colored_label(MOCHA.green, "GJ_GameSheet-uhd.png is patched!");
+                    gamesheet_patched = true;
                 }
+            }
+
+            if exe_missing || gamesheet_missing {
+                ui.separator();
+                ui.colored_label(MOCHA.peach, "Make you you are running this program in the same folder as GeometryDash.exe!");
+            } else if exe_patched && gamesheet_patched {
+                ui.separator();
+                ui.colored_label(MOCHA.teal, "The patch is applied, you are good to go!");
             }
         });
     }
