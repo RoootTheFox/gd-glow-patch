@@ -100,11 +100,11 @@ impl eframe::App for GDGlowPatchApp {
 
             match self.exe_state {
                 TargetState::Present => {
-                    ui.label("GeometryDash.exe is present and valid.");
-                    if ui.button("Patch exe").on_hover_text("Patches the GeometryDash.exe file.").clicked() {
+                    ui.colored_label(MOCHA.sky, "GeometryDash.exe is present");
+                    if ui.button("Patch exe").on_hover_text("Patches the GeometryDash.exe file").clicked() {
                         let exe_patched = patch_exe(self.exe_path.clone());
                         if !exe_patched.is_ok() {
-                            ui.colored_label(MOCHA.red, "Failed to patch GeometryDash.exe.");
+                            ui.colored_label(MOCHA.red, "Failed to patch GeometryDash.exe!");
                         }
                         update_ui_states(self);
                     }
@@ -124,7 +124,7 @@ impl eframe::App for GDGlowPatchApp {
 
             match self.gamesheet_state {
                 TargetState::Present => {
-                    ui.label("Gamesheet is present.");
+                    ui.colored_label(MOCHA.sky, "GJ_GameSheet-uhd.png is present");
                     if ui.button("Patch gamesheet").on_hover_text("Patches GJ_GameSheet-uhd.png for better glow").clicked() {
                         let res_patched = patch_resources(self.gamesheet_path.clone());
                         if !res_patched.is_ok() {
