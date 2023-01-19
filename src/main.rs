@@ -23,8 +23,11 @@ lazy_static_include_bytes! {
 }
 
 fn main() {
+    let window_size = egui::vec2(280.0, 320.0);
     let options = eframe::NativeOptions {
-        initial_window_size: Some(egui::vec2(280.0, 340.0)),
+        initial_window_size: Some(window_size),
+        min_window_size: Some(window_size),
+        max_window_size: Some(window_size),
         ..Default::default()
     };
 
