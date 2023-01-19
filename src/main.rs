@@ -4,7 +4,6 @@ mod platform;
 
 use crate::app::GDGlowPatchApp;
 use crate::err::{PatchError, TargetState};
-use lazy_static::lazy_static;
 use lazy_static_include::lazy_static_include_bytes;
 use std::error::Error;
 use std::fs::{File, OpenOptions};

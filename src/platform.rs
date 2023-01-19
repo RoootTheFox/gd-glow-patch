@@ -1,8 +1,8 @@
 use std::path::PathBuf;
 
 pub(crate) fn get_gd_directory() -> Option<PathBuf> {
-    let mut gd_path:Option<PathBuf> = None;
-    
+    let gd_path:Option<PathBuf>;
+
     #[cfg(target_os = "linux")] {
         let home = std::env::var("HOME").unwrap();
         gd_path = Some(PathBuf::from(home)
