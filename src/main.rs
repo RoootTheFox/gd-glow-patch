@@ -1,9 +1,16 @@
+// hide console window on windows in release
+// taken from example in egui repo
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 mod app;
 mod err;
 mod platform;
 
+use eframe::egui;
+
 use crate::app::GDGlowPatchApp;
 use crate::err::{PatchError, TargetState};
+use egui::Vec2;
 use lazy_static_include::lazy_static_include_bytes;
 use std::error::Error;
 use std::fs::{File, OpenOptions};
@@ -16,17 +23,19 @@ const ORIGINAL: u8 = 0x06; // value to replace (=RGBA4444)
 const PATCHED: u8 = 0x00; // value to replace with (=RGBA8888)
 
 const GAMESHEET_SIZE: u64 = 2865699; // GJ_GameSheet-uhd.png (unmodified) size in bytes
+const WINDOW_SIZE: Vec2 = egui::vec2(280.0, 320.0);
 
 lazy_static_include_bytes! {
     PATCHED_GAMESHEET => "res/GJ_GameSheet-uhd.png"
 }
 
 fn main() {
-    let window_size = egui::vec2(280.0, 320.0);
     let options = eframe::NativeOptions {
-        initial_window_size: Some(window_size),
-        min_window_size: Some(window_size),
-        max_window_size: Some(window_size),
+        initial_window_size: Some(WINDOW_SIZE),
+        min_window_size: Some(WINDOW_SIZE),
+        max_window_size: Some(WINDOW_SIZE),
+        decorated: false,
+        transparent: true,
         ..Default::default()
     };
 
@@ -55,7 +64,7 @@ fn check_gd_exe(app: &mut GDGlowPatchApp, gd_exe: &PathBuf) -> Result<(), Box<dy
     Ok(())
 }
 
-fn patch_exe(gd_exe: PathBuf) -> Result<bool, Box<dyn Error>> {
+fn patch_exe(gd_exe: &PathBuf) -> Result<bool, Box<dyn Error>> {
     let gd_exe_size = gd_exe.metadata()?.len();
 
     if gd_exe_size != SIZE {

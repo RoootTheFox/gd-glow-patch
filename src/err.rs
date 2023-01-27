@@ -31,6 +31,7 @@ impl Error for PatchError {
     }
 }
 
+#[derive(Copy, Clone)]
 pub enum TargetState {
     Present,
     Patched,
